@@ -216,6 +216,7 @@ def dump_gotm_monthly_clim_file(indata,ymin,ymax,lev,var,dir_output=''):
         fid.write(str(- 10984.0)) #  The Mariana Trench depth
         fid.write("\t")
         fid.write(str(indata[tt,-1]))
+        fid.write("\n")
 
     fid.close()
 ##################################
@@ -273,22 +274,35 @@ ymin=2009
 ymax=2020
 # Variables with no unit conversion
 var_list=['Temp', 'Sal1','Sig-th']
+
 for var in var_list:
     print("processing var : ", var)
     indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2)
     dump_gotm_monthly_clim_file(indata,ymin,ymax,vlev,var,dir_gotm_clim_txt)
 
+# Density scaling
+print("processing var : Sig-th")
+sig_th=create_monthly_clim(df,'Sig-th',vlev,delta,ymin,ymax,'',2)
+dump_gotm_monthly_clim_file(sig_th,ymin,ymax,vlev,'Sig-th',dir_gotm_clim_txt)
+
 # Variables with unit conversion
 var_list=['PO41','O2(1)','CO2', 'Alk','Si1','POC','PON','POP']
 for var in var_list:
     print("processing var : ", var)
-    indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'Sig-th',2)
-    indata_scaled = indata/1000. #1/Liter --> 1/m3
+#   indata_scaled = indata/1000. #1/Liter --> 1/m3
+    indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2)
+    indata_scaled = indata * (1000.+sig_th)/1000.
     dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,dir_gotm_clim_txt)
 
+############
 # nitrites + nitrates requires unit conversion
+############
+
 print("processing var : NOX")
-NO2=create_monthly_clim(df,'NO21',vlev,delta,ymin,ymax,'Sig-th',2)
-NO3=create_monthly_clim(df,'NO31',vlev,delta,ymin,ymax,'Sig-th',2)
-indata_scaled = (NO2+NO3)/1000. #1/Liter --> 1/m3
+#NO2=create_monthly_clim(df,'NO21',vlev,delta,ymin,ymax,'Sig-th',2)
+#NO3=create_monthly_clim(df,'NO31',vlev,delta,ymin,ymax,'Sig-th',2)
+#indata_scaled = (NO2+NO3)/1000. #1/Liter --> 1/m3
+NO2=create_monthly_clim(df,'NO21',vlev,delta,ymin,ymax,'',2)
+NO3=create_monthly_clim(df,'NO31',vlev,delta,ymin,ymax,'',2)
+indata_scaled = (NO2+NO3)* (1000.+sig_th)/1000.
 dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'NOX',dir_gotm_clim_txt)
