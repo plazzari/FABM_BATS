@@ -133,36 +133,91 @@ def dump_gotm_file(dfin,var,dir_output=''):
 
     fid.close()
 
-def create_monthly_clim(df,var,vlev,delta,ymin,ymax):
+def create_monthly_clim(df,var,vlev,delta,ymin,ymax,conversion_var,mode):
+    Nrows=df.shape[0]
     Nk=len(vlev)
     clim=np.zeros((12,Nk))
-#   for mm in range(1,13):
-    for mm in range(1,2):
-        dfclim=df.copy(deep=True)
-        for index, row in dfclim.iterrows():
+    conversion_factor=np.zeros((12,Nk)) + 1.0
+
+    for tt in range(0,12):
+        mm = tt + 1
+        time_filter_idx=[]
+        for index, row in df.iterrows():
             yyyymmdd=row['yyyymmdd']
             yyyy=int(str(int(yyyymmdd))[0:4])
             month=int(str(int(yyyymmdd))[4:6])
 #           print(month)
-            if( month != mm):
-                dfclim[index,'yyyymmdd'] = -1
-            if ( yyyy < ymin):
-                dfclim[index,'yyyymmdd'] = -1
-            if ( yyyy > ymax):
-                dfclim[index,'yyyymmdd'] = -1
+            if ( month == mm) and ( yyyy > ymin) and ( yyyy < ymax):
+                time_filter_idx.append(index)
+
+        dfclim=df.iloc[time_filter_idx,:].copy(deep=True)
 
         for k,lev in enumerate(vlev):
-            rule1= dfclim[var] > -998.0 
-            rule2=dfclim['Depth'] >  lev-delta[k]
-            rule3=dfclim['Depth'] <= lev+delta[k]
-            rule4=dfclim['yyyymmdd'] > 0
-#           rule2= int(str(df['yyyymmdd'].values)[5:7]) == mm
+
+            if conversion_var != '':
+
+                rule1 = dfclim[conversion_var] > -998.0 
+                rule2 = dfclim['Depth'] >  lev-delta[k]
+                rule3 = dfclim['Depth'] <= lev+delta[k]
+                rule4 = dfclim['yyyymmdd'] > 0
+#           
+                df1 = dfclim.loc[rule1]
+                df2 = df1.loc[rule2]
+                df3 = df2.loc[rule3]
+                df4 = df3.loc[rule4]
+                sample_filtered=df4[conversion_var].values
+                conversion_factor[tt,k]=np.nanpercentile(sample_filtered,50.0)
+
+            rule1 = dfclim[var] > -998.0 
+            rule2 = dfclim['Depth'] >  lev-delta[k]
+            rule3 = dfclim['Depth'] <= lev+delta[k]
+            rule4 = dfclim['yyyymmdd'] > 0
+#          
             df1 = dfclim.loc[rule1]
             df2 = df1.loc[rule2]
             df3 = df2.loc[rule3]
             df4 = df3.loc[rule4]
-            sample_filtered=df4
-    return sample_filtered
+            sample_filtered=df4[var].values
+            clim[tt,k]=np.nanpercentile(sample_filtered,50.0)*conversion_factor[tt,k]
+
+    if mode == 0:
+        return df4
+    if mode == 1:
+        return conversion_factor
+    if mode == 2:
+        return clim
+def dump_gotm_monthly_clim_file(indata,ymin,ymax,lev,var,dir_output=''):
+
+    nrows=len(lev)
+
+    file_gotm = dir_output + '/' + var + '_clim.txt'
+
+    fid = open(file_gotm,'w')
+
+    yyyy=int((ymax+ymin)/2)
+
+# days per month 
+#        [31,28,31,30,31,30,31,31,30,31,30,31]
+    dd  =[16,15,16,16,16,16,16,16,16,16,16,16]
+    HH  =[12,0 ,12, 0,12, 0,12,12, 0,12, 0,12]
+
+    for tt in range(12):
+        mm = tt +1
+# Write output file
+        current_date=datetime.datetime(yyyy, mm, dd[tt], HH[tt], 0, 0)
+        gotm_header= current_date.strftime("%Y-%m-%d %H:%M:%S\t" + str(nrows) + "\t2")
+        fid.write(gotm_header)
+        fid.write("\n")
+        for zz,d in enumerate(lev): 
+            fid.write(str(-d))
+            fid.write("\t")
+            fid.write(str(indata[tt,zz]))
+            fid.write("\n")
+        fid.write(str(- 10984.0)) #  The Mariana Trench depth
+        fid.write("\t")
+        fid.write(str(indata[tt,-1]))
+
+    fid.close()
 ##################################
 ###MAIN CODE
 ##################################
@@ -173,7 +228,7 @@ vlev=[0., 10., 20., 40., 60., 80., 100., 120., 140., 160., 200., 250., 300., 400
 Nlev=len(vlev)
 delta=np.zeros(Nlev)
 for k in range(Nlev):
-    if (vlev[k] >0) and (vlev[k] <= 5.):
+    if vlev[k] <= 5.:
        delta[k]=5. 
     if (vlev[k] >5.) and (vlev[k] <= 160.):
        delta[k]=2. 
@@ -190,6 +245,9 @@ crdir(dirplots)
 dir_gotm_txt='GOTM_INPUT'
 crdir(dir_gotm_txt)
 
+dir_gotm_clim_txt='GOTM_INPUT_CLIM'
+crdir(dir_gotm_clim_txt)
+
 df0 = pd.read_csv("DATA_BATS/bats_bottle.txt", sep="\t",skiprows = 59, engine='python')
 
 #ordering data for ascending date and ascending depth
@@ -200,14 +258,37 @@ df = df0.sort_values(['yyyymmdd', 'time', 'Depth'], ascending=[True, True, True]
 
 #-----------------------
 
-#var_list=['Temp', 'Sal1','Sig-th','NO21','NO31', 'PO41','O2(1)']
-var_list=['Temp', 'Sal1','Sig-th','NO21','NO31', 'PO41','O2(1)','CO2', 'Alk','Si1','POC','PON','POP']
-#var_list=['Temp']
+#var_list=['Temp', 'Sal1','Sig-th','NO21','NO31', 'PO41','O2(1)','CO2', 'Alk','Si1','POC','PON','POP']
 
 #for var in var_list:
 
-#    samp_date_hist(df,var, dirplots)
-#    samp_depth_hist(df,var, dirplots)
+#   samp_date_hist(df,var, dirplots)
+#   samp_depth_hist(df,var, dirplots)
+
 #    dump_gotm_file(df,var, dir_gotm_txt)
 
-test=create_monthly_clim(df, 'Temp', vlev, delta, 2009, 2020)
+
+#### Create climatology
+ymin=2009
+ymax=2020
+# Variables with no unit conversion
+var_list=['Temp', 'Sal1','Sig-th']
+for var in var_list:
+    print("processing var : ", var)
+    indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2)
+    dump_gotm_monthly_clim_file(indata,ymin,ymax,vlev,var,dir_gotm_clim_txt)
+
+# Variables with unit conversion
+var_list=['PO41','O2(1)','CO2', 'Alk','Si1','POC','PON','POP']
+for var in var_list:
+    print("processing var : ", var)
+    indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'Sig-th',2)
+    indata_scaled = indata/1000. #1/Liter --> 1/m3
+    dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,dir_gotm_clim_txt)
+
+# nitrites + nitrates requires unit conversion
+print("processing var : NOX")
+NO2=create_monthly_clim(df,'NO21',vlev,delta,ymin,ymax,'Sig-th',2)
+NO3=create_monthly_clim(df,'NO31',vlev,delta,ymin,ymax,'Sig-th',2)
+indata_scaled = (NO2+NO3)/1000. #1/Liter --> 1/m3
+dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'NOX',dir_gotm_clim_txt)
