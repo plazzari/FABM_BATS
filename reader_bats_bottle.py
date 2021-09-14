@@ -202,11 +202,20 @@ def dump_gotm_monthly_clim_file(indata,ymin,ymax,lev,var,dir_output=''):
     dd  =[16,15,16,16,16,16,16,16,16,16,16,16]
     HH  =[12,0 ,12, 0,12, 0,12,12, 0,12, 0,12]
 
+
+
     for tt in range(12):
+
         mm = tt +1
+        count = 1 # Start from 1 since we add -10000 m value
+
+        for zz,d in enumerate(lev):
+            if not np.isnan(indata[tt,zz]):
+                count += 1
+
 # Write output file
         current_date=datetime.datetime(yyyy, mm, dd[tt], HH[tt], 0, 0)
-        gotm_header= current_date.strftime("%Y-%m-%d %H:%M:%S\t" + str(nrows) + "\t2")
+        gotm_header= current_date.strftime("%Y-%m-%d %H:%M:%S\t" + str(count) + "\t2")
         fid.write(gotm_header)
         fid.write("\n")
         for zz,d in enumerate(lev): 
@@ -306,12 +315,36 @@ for mm in range(12):
 dump_gotm_monthly_clim_file(RHO,ymin,ymax,vlev,'RHO_insitu',dir_gotm_clim_txt)
 
 # Variables with unit conversion
-var_list=['PO41','O2(1)','CO2', 'Alk','Si1','POC','PON','POP']
+var_list=['PO41','O2(1)', 'Alk','Si1','POC']
 for var in var_list:
     print("processing var : ", var)
 #   indata_scaled = indata/1000. #1/Liter --> 1/m3
     indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2)
     indata_scaled = indata * RHO/1000.
+    dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,dir_gotm_clim_txt)
+
+var_list=['CO2']
+for var in var_list:
+    print("processing var : ", var)
+#   indata_scaled = indata/1000. #1/Liter --> 1/m3
+    indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2)
+    indata_scaled = indata * RHO/1000. *12.0
+    dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,dir_gotm_clim_txt)
+
+var_list=['PON']
+for var in var_list:
+    print("processing var : ", var)
+#   indata_scaled = indata/1000. #1/Liter --> 1/m3
+    indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2)
+    indata_scaled = indata * RHO/ 1000. / 14.0
+    dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,dir_gotm_clim_txt)
+
+var_list=['POP']
+for var in var_list:
+    print("processing var : ", var)
+#   indata_scaled = indata/1000. #1/Liter --> 1/m3
+    indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2)
+    indata_scaled = indata * RHO/ 1000. / 31.0
     dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,dir_gotm_clim_txt)
 
 ############
