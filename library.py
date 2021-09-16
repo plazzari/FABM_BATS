@@ -227,9 +227,6 @@ def dump_gotm_monthly_clim_file(indata,ymin,ymax,lev,var,month_list,dir_output='
                 'NOV':10,
                 'DEC':11}
 
-
-
-
     for month in month_list:
 
         tt=month_dict[month]
@@ -250,12 +247,12 @@ def dump_gotm_monthly_clim_file(indata,ymin,ymax,lev,var,month_list,dir_output='
             if not np.isnan(indata[tt,zz]):
                fid.write(str(-d))
                fid.write("\t")
-               fid.write(str(max(indata[tt,zz],0.01)))
+               fid.write(str(indata[tt,zz]))
                fid.write("\n")
-        if not np.isnan(indata[tt,zz]):
+        if not np.isnan(indata[tt,-1]):
            fid.write(str(- 10984.0)) #  The Mariana Trench depth
            fid.write("\t")
-           fid.write(str(max(indata[tt,-1],0.01)))
+           fid.write(str(indata[tt,-1]))
            fid.write("\n")
         else:
            fid.write(str(- 10984.0)) #  The Mariana Trench depth
