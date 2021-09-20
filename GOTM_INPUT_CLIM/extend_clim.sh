@@ -4,7 +4,7 @@
 # So it just copies the files, change the years, and concatenate all years in a single file with the same name.
 # A. Capet 17/09/2021
 
-for v in Temp Sal1 PO41 NO3 NO2 Chl O2 Si1 Alk CO2 POC PON POP
+for v in Temp Sal1 PO41 NO3 NO2 Chl O2\(1\) Si1 Alk CO2 POC PON POP DOC DON DOP
 do
     vo=$v'_clim.txt'
     for y in 2015 2016 2017 2018 2019 2020
