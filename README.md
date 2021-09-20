@@ -11,8 +11,8 @@
 | Dissolved inorganic Carbon | mg C / m3    | CO2\_clim.txt   |  |
 | Alkalinity                 | mmol / m3    | Alk\_clim.txt   |
 | POC                        | mg C / m3  | POC\_clim.txt   | ! Includes both living AND dead cells !  |
-| PON                        | mmol C / m3  | PON\_clim.txt   | ! Includes both living AND dead cells !  |
-| POP                        | mmol C / m3  | POP\_clim.txt   | ! Includes both living AND dead cells !     |
+| PON                        | mmol N / m3  | PON\_clim.txt   | ! Includes both living AND dead cells !  |
+| POP                        | mmol P / m3  | POP\_clim.txt   | ! Includes both living AND dead cells !     |
 | DOC                        | mg  C / m3  | DOC\_clim.txt   | Processed as TOC - POC  |
 | DON                        | mmol N / m3  | DON\_clim.txt   | Processed as TN - PON - NO3  |
 | DOP                        | mmol P / m3  | DOP\_clim.txt   | Processed as TDP - PO4     |
