@@ -1,8 +1,6 @@
 # FABM_BATS
 
-The procedure to construct the climatology is based ... 
-
-
+## Files produced
 
 | Variable                   | Unit         | Filename        | Comments               |
 | -------------------------- | ------------ | --------------- |----------------------- |
@@ -19,3 +17,4 @@ The procedure to construct the climatology is based ...
 | DON                        | mmol C / m3  | PON\_clim.txt   | Processed as TN - PON - NO3  |
 | DOP                        | mmol C / m3  | POP\_clim.txt   |                              |
 | Chlorophyll                | mg / m³      | Chl\_clim.txt   |                            |
+
