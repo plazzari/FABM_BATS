@@ -18,3 +18,4 @@
 | DOP                        | mmol C / m3  | POP\_clim.txt   |                              |
 | Chlorophyll                | mg / m³      | Chl\_clim.txt   |                            |
 
+[See figures](GOTM_INPUT_CLIM/BatsClims.png)
