@@ -57,9 +57,30 @@ detection_limit={'NO21':0.01, # mmol/m3
                  'PON':0.5/14., # umol/Kg --> assume is umol/L
                  'POP':0.01,
                  'Chl':0.001,
+                 'TDP':0.01,
+                 'TOC':np.nan,
+                 'TN':0.05,
                  'Temp': np.nan,
                  'Sal1': np.nan,
                  'Sig-th':np.nan} 
+
+bottom_fill={'NO21':True, # if false set bottom value to zero
+                 'NO31':True, 
+                 'PO41':True, 
+                 'O2(1)':True,
+                 'CO2':True,
+                 'Alk':True,
+                 'Si1':True,   
+                 'POC':False,  
+                 'PON':False, 
+                 'POP':False,
+                 'Chl':False,
+                 'TDP':True,
+                 'TOC':True,
+                 'TN':True,
+                 'Temp': True,
+                 'Sal1': True,
+                 'Sig-th':True} 
 
 #for var in var_list:
 
@@ -68,10 +89,10 @@ detection_limit={'NO21':0.01, # mmol/m3
 
 #    dump_gotm_file(df,var, dir_gotm_txt)
 
-#   month_list=['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-#               'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+month_list=['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+            'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
 
-month_list=['JAN']
+#month_list=['JAN']
 
 
 #### Create climatology
@@ -83,13 +104,13 @@ ymax=2020
 print("processing var : Temperature")
 var='Temp'
 Temp=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
-dump_gotm_monthly_clim_file(Temp,ymin,ymax,vlev,var,month_list,dir_gotm_clim_txt)
+dump_gotm_monthly_clim_file(Temp,ymin,ymax,vlev,var,month_list,bottom_fill[var],dir_gotm_clim_txt)
 
 # Salinity
 print("processing var : Salinity")
 var='Sal1'
 Sal1=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
-dump_gotm_monthly_clim_file(Sal1,ymin,ymax,vlev,var,month_list,dir_gotm_clim_txt)
+dump_gotm_monthly_clim_file(Sal1,ymin,ymax,vlev,var,month_list,bottom_fill[var],dir_gotm_clim_txt)
 
 # Density scaling using in-situ computed density from T and S
 print("processing var : RHO")
@@ -100,7 +121,7 @@ for mm in range(12):
         t=Temp[mm,kk]
         p=vlev[k]
         RHO[mm,kk]=dens(s, t, p)
-dump_gotm_monthly_clim_file(RHO,ymin,ymax,vlev,'RHO_insitu',month_list,dir_gotm_clim_txt)
+dump_gotm_monthly_clim_file(RHO,ymin,ymax,vlev,'RHO_insitu',month_list,True,dir_gotm_clim_txt)
 
 # Variables with unit conversion
 var_list=['PO41','O2(1)', 'Alk','Si1','POC']
@@ -109,7 +130,7 @@ for var in var_list:
 #   indata_scaled = indata/1000. #1/Liter --> 1/m3
     indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
     indata_scaled = indata * RHO/1000.
-    dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,month_list,dir_gotm_clim_txt)
+    dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,month_list,bottom_fill[var],dir_gotm_clim_txt)
 
 var_list=['CO2']
 for var in var_list:
@@ -117,7 +138,7 @@ for var in var_list:
 #   indata_scaled = indata/1000. #1/Liter --> 1/m3
     indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
     indata_scaled = indata * RHO/1000. *12.0
-    dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,month_list,dir_gotm_clim_txt)
+    dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,month_list,bottom_fill[var],dir_gotm_clim_txt)
 
 var_list=['PON']
 for var in var_list:
@@ -125,7 +146,7 @@ for var in var_list:
 #   indata_scaled = indata/1000. #1/Liter --> 1/m3
     indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
     indata_scaled = indata * RHO/ 1000. / 14.0
-    dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,month_list,dir_gotm_clim_txt)
+    dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,month_list,False,dir_gotm_clim_txt)
 
 var_list=['POP']
 for var in var_list:
@@ -133,7 +154,7 @@ for var in var_list:
 #   indata_scaled = indata/1000. #1/Liter --> 1/m3
     indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
     indata_scaled = indata * RHO/ 1000. / 31.0
-    dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,month_list,dir_gotm_clim_txt)
+    dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,month_list,False,dir_gotm_clim_txt)
 
 ############
 # nitrites + nitrates requires unit conversion
@@ -143,14 +164,46 @@ print("processing var : NO2")
 
 NO2=create_monthly_clim(df,'NO21',vlev,delta,ymin,ymax,'',2,detection_limit[var])
 indata_scaled = NO2* RHO/1000.
-dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'NO2',month_list,dir_gotm_clim_txt)
+dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'NO2',month_list,True,dir_gotm_clim_txt)
 
-print("processing var : NO3")
+print("processing var : NO2+NO3")
 
 NO3=create_monthly_clim(df,'NO31',vlev,delta,ymin,ymax,'',2,detection_limit[var])
 indata_scaled = NO3* RHO/1000.
-dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'NO3',month_list,dir_gotm_clim_txt)
+dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'NO3',month_list,True,dir_gotm_clim_txt)
 
+############
+# Dissolved organic matter
+############
+
+print("processing var : DOC as TOC - POC")
+# TDP it is expressed in nmol/kg
+var="TOC"
+TOC=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
+var="POC"
+POC=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
+indata_scaled = (TOC*12.-POC) * RHO/1000.
+dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'DOC',month_list,True,dir_gotm_clim_txt)
+
+print("processing var : DON as TN - PON - NO3")
+# TDP it is expressed in nmol/kg
+var="TN"
+TN=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
+var="PON"
+PON=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
+var="NO31"
+NO3=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
+indata_scaled = (TN-PON/14.-NO3) * RHO/1000.
+dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'DON',month_list,True,dir_gotm_clim_txt)
+
+print("processing var : DOP")
+# TDP it is expressed in nmol/kg
+var="PO41"
+PO4=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
+var="TDP"
+TDP=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
+indata_scaled = (TDP/1000.-PO4/31.) * RHO/1000.
+dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'DOP',month_list,True,dir_gotm_clim_txt)
 
 ############
 ### Chlorophyll
@@ -169,4 +222,4 @@ month_list=['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
 
 Chl=create_monthly_clim(df,'Chl',vlev,delta,ymin,ymax,'',2,detection_limit[var])
 indata_scaled = Chl*RHO/1000.
-dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'Chl',month_list,dir_gotm_clim_txt)
+dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'Chl',month_list,False,dir_gotm_clim_txt)
