@@ -18,13 +18,23 @@ for k in range(Nlev):
     if vlev[k] <= 5.:
        delta[k]=5. 
     if (vlev[k] >5.) and (vlev[k] <= 160.):
-       delta[k]=2. 
+       delta[k]=5. 
     if (vlev[k] > 160.) and (vlev[k] <= 300.):
        delta[k]=5. 
     if (vlev[k] > 300.) and (vlev[k] <= 1400.):
        delta[k]=10. 
     if (vlev[k] > 1400.): 
        delta[k]=20. 
+
+
+bins_limit=np.zeros(Nlev+1)
+
+bins_limit[0]=0.
+for k in range(1,Nlev):
+    bins_limit[k] = 0.5*(vlev[k-1]+vlev[k])
+bins_limit[Nlev] = 0.5*(vlev[Nlev-1]+12000.)
+
+print(bins_limit)
 
 dirplots='PLOTS'
 crdir(dirplots)
@@ -82,12 +92,13 @@ bottom_fill={'NO21':True, # if false set bottom value to zero
                  'Sal1': True,
                  'Sig-th':True} 
 
-#for var in var_list:
+var_list=['Temp', 'Sal1','Sig-th','NO21','NO31', 'PO41','O2(1)','CO2', 'Alk','Si1','POC','PON','POP']
+for var in var_list:
 
-#   samp_date_hist(df,var, dirplots)
-#   samp_depth_hist(df,var, dirplots)
+   samp_date_hist(df,var, dirplots)
+   samp_depth_hist(df,var, dirplots)
 
-#    dump_gotm_file(df,var, dir_gotm_txt)
+#  dump_gotm_file(df,var, dir_gotm_txt)
 
 month_list=['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
             'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
@@ -153,7 +164,7 @@ for var in var_list:
     print("processing var : ", var)
 #   indata_scaled = indata/1000. #1/Liter --> 1/m3
     indata=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
-    indata_scaled = indata * RHO/ 1000. / 31.0
+    indata_scaled = indata * RHO/ 1000.
     dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,var,month_list,False,dir_gotm_clim_txt)
 
 ############
@@ -194,7 +205,8 @@ PON=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
 var="NO31"
 NO3=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
 indata_scaled = (TN-PON/14.-NO3) * RHO/1000.
-dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'DON',month_list,True,dir_gotm_clim_txt)
+indata_scaled[indata_scaled<0] = np.nan
+dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'DON',month_list,False,dir_gotm_clim_txt)
 
 print("processing var : DOP")
 # TDP it is expressed in nmol/kg
@@ -202,8 +214,20 @@ var="PO41"
 PO4=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
 var="TDP"
 TDP=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
-indata_scaled = (TDP/1000.-PO4/31.) * RHO/1000.
-dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'DOP',month_list,True,dir_gotm_clim_txt)
+indata_scaled = (TDP/1000.-PO4) * RHO/1000.
+indata_scaled[indata_scaled<0] = np.nan
+dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'DOP',month_list,False,dir_gotm_clim_txt)
+
+print("processing var : TP")
+# TDP it is expressed in nmol/kg
+var="TDP"
+TDP=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
+var="POP"
+POP=create_monthly_clim(df,var,vlev,delta,ymin,ymax,'',2,detection_limit[var])
+indata_scaled = (TDP/1000.+POP) * RHO/1000.
+indata_scaled[indata_scaled<0] = np.nan
+dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'TP',month_list,True,dir_gotm_clim_txt)
+
 
 ############
 ### Chlorophyll
@@ -223,3 +247,5 @@ month_list=['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
 Chl=create_monthly_clim(df,'Chl',vlev,delta,ymin,ymax,'',2,detection_limit[var])
 indata_scaled = Chl*RHO/1000.
 dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'Chl',month_list,False,dir_gotm_clim_txt)
+
+

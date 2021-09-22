@@ -148,6 +148,14 @@ def create_monthly_clim(df,var,vlev,delta,ymin,ymax,conversion_var,mode,det_limi
     clim=np.zeros((12,Nk))
     conversion_factor=np.zeros((12,Nk)) + 1.0
 
+    bins_limit=np.zeros(Nk+1)
+
+    bins_limit[0]=0. 
+    for k in range(1,Nk):
+        bins_limit[k] = 0.5*(vlev[k-1]+vlev[k])
+    bins_limit[Nk] = 0.5*(vlev[Nk-1]+12000.)
+
+
     for tt in range(0,12):
         mm = tt + 1
         time_filter_idx=[]
@@ -163,29 +171,22 @@ def create_monthly_clim(df,var,vlev,delta,ymin,ymax,conversion_var,mode,det_limi
 
         for k,lev in enumerate(vlev):
 
-#           if conversion_var != '':
 
-#               rule1 = dfclim[conversion_var] > -998.0 
-#               rule2 = dfclim['Depth'] >  lev-delta[k]
-#               rule3 = dfclim['Depth'] <= lev+delta[k]
-#               rule4 = dfclim['yyyymmdd'] > 0
-#           
-#               df1 = dfclim.loc[rule1]
-#               df2 = df1.loc[rule2]
-#               df3 = df2.loc[rule3]
-#               df4 = df3.loc[rule4]
-#               sample_filtered=df4[conversion_var].values
-#               conversion_factor[tt,k]=np.nanpercentile(sample_filtered,50.0)
-
-            rule1 = dfclim[var] > -998.0 
-            rule2 = dfclim['Depth'] >  lev-delta[k]
-            rule3 = dfclim['Depth'] <= lev+delta[k]
+#           rule2 = dfclim['Depth'] >  lev-delta[k]
+#           rule3 = dfclim['Depth'] <= lev+delta[k]
+#           rule2 = dfclim['Depth'] >  bins_limit[k]
+#           rule3 = dfclim['Depth'] <= bins_limit[k+1]
             rule4 = dfclim['yyyymmdd'] > 0
 #          
+            rule1 = dfclim[var] > -998.0 
             df1 = dfclim.loc[rule1]
+            rule2 = df1['Depth'] >  bins_limit[k]
             df2 = df1.loc[rule2]
+            rule3 = df2['Depth'] <= bins_limit[k+1]
             df3 = df2.loc[rule3]
+            rule4 = df3['yyyymmdd'] > 0
             df4 = df3.loc[rule4]
+
             if not np.isnan(det_limit):
                sample_filtered=np.maximum(df4[var].values,det_limit/2.0)
             else:
@@ -193,8 +194,19 @@ def create_monthly_clim(df,var,vlev,delta,ymin,ymax,conversion_var,mode,det_limi
 
             if (sample_filtered.size == 0) or (sum(np.isnan(sample_filtered)) == sample_filtered.size):
                 clim[tt,k]=np.nan
+                print(["var "   + var])
+                print(["month " + str(mm)])
+                print(["lev "   + str(lev)])
+                print(["# 0 "])
+                print(["++++++++++++++++++++++++++++++++++++++"])
             else:
                 clim[tt,k]=np.nanpercentile(sample_filtered,50.0)
+                print([ "var " + var])
+                print(["month " + str(mm)])
+                print([ "lev " + str(lev)])
+                print([ "#   " + str( sample_filtered.size - sum(np.isnan(sample_filtered))) ])
+                print([ "val " + str(clim[tt,k])])
+                print(["++++++++++++++++++++++++++++++++++++++"])
 
     if mode == 0:
         return df4
@@ -255,12 +267,12 @@ def dump_gotm_monthly_clim_file(indata,ymin,ymax,lev,var,month_list,bottom_value
                fid.write("\n")
                last_value=indata[tt,zz]
         if bottom_value:
-           fid.write(str(- 10984.0)) #  The Mariana Trench depth
+           fid.write(str(- 12000.)) #  The Mariana Trench depth
            fid.write("\t")
            fid.write(str(last_value))
            fid.write("\n")
         else:
-           fid.write(str(- 10984.0)) #  The Mariana Trench depth
+           fid.write(str(- 12000.)) #  The Mariana Trench depth
            fid.write("\t")
            fid.write(str(0.0))
            fid.write("\n")
