@@ -173,13 +173,13 @@ for var in var_list:
 
 print("processing var : NO2")
 
-NO2=create_monthly_clim(df,'NO21',vlev,delta,ymin,ymax,'',2,detection_limit[var])
+NO2=create_monthly_clim(df,'NO21',vlev,delta,ymin,ymax,'',2,detection_limit['NO21'])
 indata_scaled = NO2* RHO/1000.
 dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'NO2',month_list,True,dir_gotm_clim_txt)
 
 print("processing var : NO2+NO3")
 
-NO3=create_monthly_clim(df,'NO31',vlev,delta,ymin,ymax,'',2,detection_limit[var])
+NO3=create_monthly_clim(df,'NO31',vlev,delta,ymin,ymax,'',2,detection_limit['NO31'])
 indata_scaled = NO3* RHO/1000.
 dump_gotm_monthly_clim_file(indata_scaled,ymin,ymax,vlev,'NO3',month_list,True,dir_gotm_clim_txt)
 
