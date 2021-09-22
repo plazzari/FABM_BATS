@@ -5,7 +5,7 @@
 | Variable                   | Unit         | Filename        | Comments               |
 | -------------------------- | ------------ | --------------- |----------------------- |
 | Oxygen                     | mmol O2 /m³  | O2(1)\_clim.txt |                        |
-| Nitrate                    | mmol N /m³   | NO3\_clim.txt   | ! contains instead NO3+NO2 !|
+| Nitrate                    | mmol N /m³   | NO3\_clim.txt   | ! contains NO3+NO2 !   |
 | Phosphate                  | mmol P / m³  | PO41\_clim.txt  |                             |
 | Silicate                   | mmol Si / m³ | Sil1\_clim.txt  |  |
 | Dissolved inorganic Carbon | mg C / m³    | CO2\_clim.txt   |  |
