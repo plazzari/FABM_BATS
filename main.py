@@ -130,7 +130,7 @@ for mm in range(12):
     for kk in range(Nlev):
         s=Sal1[mm,kk]
         t=Temp[mm,kk]
-        p=vlev[k]
+        p=vlev[kk]
         RHO[mm,kk]=dens(s, t, p)
 dump_gotm_monthly_clim_file(RHO,ymin,ymax,vlev,'RHO_insitu',month_list,True,dir_gotm_clim_txt)
 
